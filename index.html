@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Six Feet Under | Monster Tribe - Orcrist Server</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Atmospheric particles -->
+  <div class="particles" id="particles"></div>
+
+  <!-- Navigation -->
+  <nav class="nav" id="nav">
+    <div class="nav-brand">
+      <span class="nav-icon">&#9876;</span>
+      <span class="nav-title">Six Feet Under</span>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#home">Startseite</a></li>
+      <li><a href="#about">Unser Tribe</a></li>
+      <li><a href="#rules">Regeln</a></li>
+      <li><a href="#roster">Mitglieder</a></li>
+      <li><a href="#gallery">Galerie</a></li>
+      <li><a href="#join">Beitreten</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero" id="home">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-emblem">&#9760;</div>
+      <h1 class="hero-title">
+        <span class="hero-title-top">Six Feet</span>
+        <span class="hero-title-bottom">Under</span>
+      </h1>
+      <div class="hero-divider">
+        <span class="divider-line"></span>
+        <span class="divider-icon">&#9876;</span>
+        <span class="divider-line"></span>
+      </div>
+      <p class="hero-subtitle">Monster-Only PvP Tribe</p>
+      <p class="hero-server">Server: Orcrist</p>
+      <a href="#about" class="hero-cta">Betritt die Dunkelheit</a>
+    </div>
+    <div class="hero-scroll-indicator">
+      <span>&#8964;</span>
+    </div>
+  </header>
+
+  <!-- About Section -->
+  <section class="section about" id="about">
+    <div class="container">
+      <div class="section-header">
+        <div class="rune-decoration">&#10041;</div>
+        <h2 class="section-title">Unser Tribe</h2>
+        <div class="section-divider">
+          <span class="divider-line"></span>
+          <span class="divider-rune">&#10038;</span>
+          <span class="divider-line"></span>
+        </div>
+      </div>
+
+      <div class="about-grid">
+        <div class="about-card">
+          <div class="card-icon">&#9876;</div>
+          <h3>Monster PvP</h3>
+          <p>Wir sind ein reiner Monster-Tribe. Unsere Kreaturen bringen Tod und Verderben auf das Schlachtfeld von Orcrist. Kein Erbarmen, kein Ruckzug.</p>
+        </div>
+        <div class="about-card">
+          <div class="card-icon">&#9760;</div>
+          <h3>Sechs Fuss tief</h3>
+          <p>Unsere Gegner enden alle am selben Ort - sechs Fuss unter der Erde. Wir graben das Grab, bevor der Kampf beginnt.</p>
+        </div>
+        <div class="about-card">
+          <div class="card-icon">&#128737;</div>
+          <h3>Bruderschaft</h3>
+          <p>Wie die Nazgul dem Dunklen Herrscher dienen, so halten wir zusammen. Ein Tribe, ein Ziel, eine Armee der Finsternis.</p>
+        </div>
+      </div>
+
+      <div class="about-lore">
+        <blockquote>
+          <p>&laquo; Aus der Tiefe steigen wir empor, aus der Dunkelheit geschmiedet, vom Schatten geboren. Wo wir wandeln, wachst kein Gras mehr. Wo wir kampfen, bleibt nur Asche. Wir sind Six Feet Under - und wir kommen fur euch. &raquo;</p>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rules Section -->
+  <section class="section rules" id="rules">
+    <div class="container">
+      <div class="section-header">
+        <div class="rune-decoration">&#10041;</div>
+        <h2 class="section-title">Die Gesetze des Tribes</h2>
+        <div class="section-divider">
+          <span class="divider-line"></span>
+          <span class="divider-rune">&#10038;</span>
+          <span class="divider-line"></span>
+        </div>
+      </div>
+
+      <div class="rules-scroll">
+        <div class="scroll-ornament top">&#10040;</div>
+        <ol class="rules-list">
+          <li>
+            <strong>Loyalitat uber alles</strong>
+            <p>Verrat am Tribe wird nicht geduldet. Wer gegen die eigenen Bruder handelt, wird verbannt.</p>
+          </li>
+          <li>
+            <strong>Monster Only</strong>
+            <p>Wir spielen ausschliesslich Monster-Klassen. Das ist unsere Identitat und unsere Starke.</p>
+          </li>
+          <li>
+            <strong>Aktive Teilnahme</strong>
+            <p>Jedes Mitglied nimmt an Tribe-Events und Raids teil. Inaktivitat wird nach Vorwarnung bestraft.</p>
+          </li>
+          <li>
+            <strong>PvP ist Pflicht</strong>
+            <p>Wir sind ein PvP-Tribe. Wer den Kampf scheut, ist hier falsch.</p>
+          </li>
+          <li>
+            <strong>Respekt im Tribe</strong>
+            <p>Untereinander herrscht Respekt. Toxisches Verhalten hat keinen Platz in unseren Reihen.</p>
+          </li>
+          <li>
+            <strong>Ressourcen teilen</strong>
+            <p>Der Tribe steht uber dem Einzelnen. Ressourcen und Beute werden fair verteilt.</p>
+          </li>
+          <li>
+            <strong>Befehle befolgen</strong>
+            <p>Im Kampf gilt die Befehlskette. Der Tribe-Leader und die Offiziere haben das letzte Wort.</p>
+          </li>
+        </ol>
+        <div class="scroll-ornament bottom">&#10040;</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Roster Section -->
+  <section class="section roster" id="roster">
+    <div class="container">
+      <div class="section-header">
+        <div class="rune-decoration">&#10041;</div>
+        <h2 class="section-title">Die Krieger des Schattens</h2>
+        <div class="section-divider">
+          <span class="divider-line"></span>
+          <span class="divider-rune">&#10038;</span>
+          <span class="divider-line"></span>
+        </div>
+      </div>
+
+      <div class="roster-grid">
+        <div class="member-card rank-leader">
+          <div class="member-rank">Tribe Leader</div>
+          <div class="member-avatar">&#9760;</div>
+          <div class="member-name">???</div>
+          <div class="member-class">Dunkler Herrscher</div>
+        </div>
+        <div class="member-card rank-officer">
+          <div class="member-rank">Offizier</div>
+          <div class="member-avatar">&#9876;</div>
+          <div class="member-name">???</div>
+          <div class="member-class">Nazgul</div>
+        </div>
+        <div class="member-card rank-officer">
+          <div class="member-rank">Offizier</div>
+          <div class="member-avatar">&#9876;</div>
+          <div class="member-name">???</div>
+          <div class="member-class">Nazgul</div>
+        </div>
+        <div class="member-card rank-member">
+          <div class="member-rank">Krieger</div>
+          <div class="member-avatar">&#128737;</div>
+          <div class="member-name">???</div>
+          <div class="member-class">Ork-Berserker</div>
+        </div>
+        <div class="member-card rank-member">
+          <div class="member-rank">Krieger</div>
+          <div class="member-avatar">&#128737;</div>
+          <div class="member-name">???</div>
+          <div class="member-class">Uruk-hai</div>
+        </div>
+        <div class="member-card rank-member">
+          <div class="member-rank">Krieger</div>
+          <div class="member-avatar">&#128737;</div>
+          <div class="member-name">???</div>
+          <div class="member-class">Troll</div>
+        </div>
+      </div>
+
+      <p class="roster-note">Platzhalter - echte Namen werden nach Tribe-Grundung eingetragen</p>
+    </div>
+  </section>
+
+  <!-- Gallery Section -->
+  <section class="section gallery" id="gallery">
+    <div class="container">
+      <div class="section-header">
+        <div class="rune-decoration">&#10041;</div>
+        <h2 class="section-title">Chroniken der Schlacht</h2>
+        <div class="section-divider">
+          <span class="divider-line"></span>
+          <span class="divider-rune">&#10038;</span>
+          <span class="divider-line"></span>
+        </div>
+      </div>
+
+      <div class="gallery-grid">
+        <div class="gallery-placeholder">
+          <div class="placeholder-icon">&#128247;</div>
+          <p>Screenshot 1</p>
+          <span class="placeholder-hint">Bild hier einfugen</span>
+        </div>
+        <div class="gallery-placeholder">
+          <div class="placeholder-icon">&#128247;</div>
+          <p>Screenshot 2</p>
+          <span class="placeholder-hint">Bild hier einfugen</span>
+        </div>
+        <div class="gallery-placeholder">
+          <div class="placeholder-icon">&#128247;</div>
+          <p>Screenshot 3</p>
+          <span class="placeholder-hint">Bild hier einfugen</span>
+        </div>
+        <div class="gallery-placeholder">
+          <div class="placeholder-icon">&#128247;</div>
+          <p>Screenshot 4</p>
+          <span class="placeholder-hint">Bild hier einfugen</span>
+        </div>
+        <div class="gallery-placeholder">
+          <div class="placeholder-icon">&#128247;</div>
+          <p>Screenshot 5</p>
+          <span class="placeholder-hint">Bild hier einfugen</span>
+        </div>
+        <div class="gallery-placeholder">
+          <div class="placeholder-icon">&#128247;</div>
+          <p>Screenshot 6</p>
+          <span class="placeholder-hint">Bild hier einfugen</span>
+        </div>
+      </div>
+
+      <p class="gallery-note">Bilder werden mit Nano Banana erstellt und hier eingefugt</p>
+    </div>
+  </section>
+
+  <!-- Join Section -->
+  <section class="section join" id="join">
+    <div class="container">
+      <div class="section-header">
+        <div class="rune-decoration">&#10041;</div>
+        <h2 class="section-title">Schliess dich uns an</h2>
+        <div class="section-divider">
+          <span class="divider-line"></span>
+          <span class="divider-rune">&#10038;</span>
+          <span class="divider-line"></span>
+        </div>
+      </div>
+
+      <div class="join-content">
+        <div class="join-requirements">
+          <h3>Voraussetzungen</h3>
+          <ul>
+            <li><span class="req-icon">&#10003;</span> Monster-Klasse spielen</li>
+            <li><span class="req-icon">&#10003;</span> PvP-Erfahrung</li>
+            <li><span class="req-icon">&#10003;</span> Aktiv auf dem Orcrist Server</li>
+            <li><span class="req-icon">&#10003;</span> Teamfahig und loyal</li>
+            <li><span class="req-icon">&#10003;</span> Discord vorhanden</li>
+          </ul>
+        </div>
+
+        <div class="join-form-wrapper">
+          <form class="join-form" id="joinForm">
+            <div class="form-group">
+              <label for="charName">Charaktername</label>
+              <input type="text" id="charName" name="charName" placeholder="Dein Monstername..." required>
+            </div>
+            <div class="form-group">
+              <label for="charClass">Monster-Klasse</label>
+              <select id="charClass" name="charClass" required>
+                <option value="" disabled selected>Wahle deine Klasse...</option>
+                <option value="orc">Ork</option>
+                <option value="uruk">Uruk-hai</option>
+                <option value="troll">Troll</option>
+                <option value="warg">Warg-Reiter</option>
+                <option value="spider">Spinne</option>
+                <option value="nazgul">Nazgul</option>
+                <option value="other">Andere</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="experience">PvP-Erfahrung</label>
+              <textarea id="experience" name="experience" rows="3" placeholder="Erzahl uns von deinen Schlachten..."></textarea>
+            </div>
+            <div class="form-group">
+              <label for="discord">Discord-Name</label>
+              <input type="text" id="discord" name="discord" placeholder="DeinName#1234" required>
+            </div>
+            <button type="submit" class="submit-btn">
+              <span>Bewerbung senden</span>
+              <span class="btn-icon">&#9876;</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <span class="footer-icon">&#9760;</span>
+          <span class="footer-title">Six Feet Under</span>
+          <p>Monster-Only PvP Tribe | Server Orcrist</p>
+        </div>
+        <div class="footer-links">
+          <a href="#home">Startseite</a>
+          <a href="#about">Unser Tribe</a>
+          <a href="#rules">Regeln</a>
+          <a href="#roster">Mitglieder</a>
+          <a href="#join">Beitreten</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-divider">
+          <span class="divider-line"></span>
+          <span class="divider-rune">&#10038;</span>
+          <span class="divider-line"></span>
+        </div>
+        <p>&copy; 2026 Six Feet Under Tribe. Alle Rechte vorbehalten.</p>
+        <p class="footer-quote">&laquo; In der Tiefe lauert das Verderben &raquo;</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
