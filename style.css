@@ -841,6 +841,16 @@ body {
   text-align: center;
 }
 
+.discord-widget-embed {
+  padding: 0 1.5rem 1rem;
+}
+
+.discord-widget-embed iframe {
+  border: 1px solid var(--border);
+  border-radius: 0;
+  max-width: 100%;
+}
+
 .discord-join-btn {
   display: none;
   align-items: center;

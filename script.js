@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- Discord Widget Integration ----------
   // WICHTIG: Ersetze diese ID mit deiner Discord Server-ID!
   // Findest du unter: Server-Einstellungen → Widget → Server-ID
-  const DISCORD_GUILD_ID = 'DEINE_SERVER_ID_HIER';
+  const DISCORD_GUILD_ID = '531795681623670785';
 
   async function loadDiscordMembers() {
     const membersContainer = document.getElementById('discordMembers');
