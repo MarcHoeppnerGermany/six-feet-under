@@ -1,15 +1,32 @@
 /**
  * LOTRO Chat Logger - Cloudflare Worker
+ * With Discord OAuth2 authentication (guild + role check)
+ *
+ * Environment variables (set via wrangler secret put):
+ *   API_KEY              - API key for the watcher
+ *   DISCORD_CLIENT_ID    - Discord application client ID
+ *   DISCORD_CLIENT_SECRET - Discord application client secret
+ *   DISCORD_GUILD_ID     - Your Discord server ID
+ *   DISCORD_ROLE_IDS     - Comma-separated list of allowed role IDs (any match = access)
+ *   SESSION_SECRET       - Random secret for signing session cookies
+ *
+ * KV Namespace:
+ *   CHAT_KV              - For chat data storage
  *
  * API Endpoints:
- *   POST /api/chat          - Receive new chat lines (from watcher)
- *   GET  /api/days           - List all days with chat logs
- *   GET  /api/chat/:date     - Get all chat lines for a date (YYYY-MM-DD)
- *   GET  /api/chat/:date/since/:index - Get lines since index (for live polling)
+ *   POST /api/chat                      - Receive new chat lines (from watcher, API key auth)
+ *   GET  /api/days                      - List all days with chat logs
+ *   GET  /api/chat/:date                - Get all chat lines for a date
+ *   GET  /api/chat/:date/since/:index   - Get lines since index (for live polling)
  *
- * Pages:
- *   /                        - Day list (index)
- *   /day/:date               - Chat view for a specific day
+ * Auth Routes:
+ *   GET  /auth/login       - Redirect to Discord OAuth2
+ *   GET  /auth/callback     - Discord OAuth2 callback
+ *   GET  /auth/logout       - Clear session
+ *
+ * Pages (all require Discord auth):
+ *   /                      - Day list (index)
+ *   /day/:date             - Chat view for a specific day
  */
 
 export default {
@@ -17,7 +34,7 @@ export default {
     const url = new URL(req.url);
     const path = url.pathname;
 
-    // CORS headers for local development
+    // CORS headers
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -29,12 +46,36 @@ export default {
     }
 
     try {
-      // --- API Routes ---
-
+      // --- Watcher API (API key auth, no Discord needed) ---
       if (path === "/api/chat" && req.method === "POST") {
         return handlePostChat(req, env, corsHeaders);
       }
 
+      // --- Auth Routes (no session needed) ---
+      if (path === "/auth/login") {
+        return handleLogin(url, env);
+      }
+      if (path === "/auth/callback") {
+        return handleCallback(url, env);
+      }
+      if (path === "/auth/logout") {
+        return handleLogout(url);
+      }
+
+      // --- Everything else requires Discord auth ---
+      const session = await getSession(req, env);
+      if (!session) {
+        // For API calls return 401, for pages redirect to login
+        if (path.startsWith("/api/")) {
+          return new Response(JSON.stringify({ error: "Unauthorized" }), {
+            status: 401,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          });
+        }
+        return redirectToLogin(url);
+      }
+
+      // --- Authenticated API Routes ---
       if (path === "/api/days") {
         return handleGetDays(env, corsHeaders);
       }
@@ -51,17 +92,16 @@ export default {
         return handleGetChatSince(sinceMatch[1], parseInt(sinceMatch[2]), env, corsHeaders);
       }
 
-      // --- Page Routes ---
-
+      // --- Authenticated Page Routes ---
       if (path === "/" || path === "/index.html") {
-        return new Response(renderIndexPage(), {
+        return new Response(renderIndexPage(session), {
           headers: { "Content-Type": "text/html; charset=utf-8" },
         });
       }
 
       const dayMatch = path.match(/^\/day\/(\d{4}-\d{2}-\d{2})$/);
       if (dayMatch) {
-        return new Response(renderDayPage(dayMatch[1]), {
+        return new Response(renderDayPage(dayMatch[1], session), {
           headers: { "Content-Type": "text/html; charset=utf-8" },
         });
       }
@@ -76,10 +116,225 @@ export default {
   },
 };
 
-// --- API Handlers ---
+// ============================================================
+// Discord OAuth2 Authentication
+// ============================================================
+
+const DISCORD_API = "https://discord.com/api/v10";
+const COOKIE_NAME = "lotro_session";
+const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
+
+function getRedirectUri(url) {
+  return `${url.origin}/auth/callback`;
+}
+
+function handleLogin(url, env) {
+  const state = crypto.randomUUID();
+  const redirectUri = encodeURIComponent(getRedirectUri(url));
+  const scope = encodeURIComponent("identify guilds.members.read");
+
+  const discordUrl =
+    `https://discord.com/api/oauth2/authorize` +
+    `?client_id=${env.DISCORD_CLIENT_ID}` +
+    `&redirect_uri=${redirectUri}` +
+    `&response_type=code` +
+    `&scope=${scope}` +
+    `&state=${state}`;
+
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: discordUrl,
+      "Set-Cookie": `oauth_state=${state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
+    },
+  });
+}
+
+async function handleCallback(url, env) {
+  const code = url.searchParams.get("code");
+  if (!code) {
+    return new Response("Missing code parameter", { status: 400 });
+  }
+
+  // Exchange code for token
+  const tokenResp = await fetch(`${DISCORD_API}/oauth2/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: env.DISCORD_CLIENT_ID,
+      client_secret: env.DISCORD_CLIENT_SECRET,
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: getRedirectUri(url),
+    }),
+  });
+
+  if (!tokenResp.ok) {
+    return new Response(renderErrorPage("Discord-Anmeldung fehlgeschlagen", "Token-Austausch fehlgeschlagen. Bitte erneut versuchen."), {
+      status: 401,
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    });
+  }
+
+  const tokenData = await tokenResp.json();
+  const accessToken = tokenData.access_token;
+
+  // Get user info
+  const userResp = await fetch(`${DISCORD_API}/users/@me`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (!userResp.ok) {
+    return new Response(renderErrorPage("Discord-Fehler", "Benutzerinformationen konnten nicht abgerufen werden."), {
+      status: 401,
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    });
+  }
+
+  const user = await userResp.json();
+
+  // Get guild member info (checks membership + roles)
+  const memberResp = await fetch(
+    `${DISCORD_API}/users/@me/guilds/${env.DISCORD_GUILD_ID}/member`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+
+  if (!memberResp.ok) {
+    return new Response(
+      renderErrorPage(
+        "Kein Zugang",
+        "Du bist nicht Mitglied des erforderlichen Discord-Servers."
+      ),
+      { status: 403, headers: { "Content-Type": "text/html; charset=utf-8" } }
+    );
+  }
+
+  const member = await memberResp.json();
+
+  // Check if user has any of the allowed roles
+  const allowedRoles = (env.DISCORD_ROLE_IDS || "").split(",").map((r) => r.trim()).filter(Boolean);
+
+  if (allowedRoles.length > 0) {
+    const userRoles = member.roles || [];
+    const hasRole = allowedRoles.some((roleId) => userRoles.includes(roleId));
+
+    if (!hasRole) {
+      return new Response(
+        renderErrorPage(
+          "Keine Berechtigung",
+          "Du hast nicht die erforderliche Rolle auf dem Discord-Server."
+        ),
+        { status: 403, headers: { "Content-Type": "text/html; charset=utf-8" } }
+      );
+    }
+  }
+
+  // Build session data
+  const sessionData = {
+    userId: user.id,
+    username: user.username,
+    displayName: user.global_name || member.nick || user.username,
+    avatar: user.avatar
+      ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
+      : null,
+    roles: member.roles || [],
+    exp: Math.floor(Date.now() / 1000) + SESSION_MAX_AGE,
+  };
+
+  // Sign and set cookie
+  const sessionCookie = await signSession(sessionData, env.SESSION_SECRET);
+
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: "/",
+      "Set-Cookie": `${COOKIE_NAME}=${sessionCookie}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_MAX_AGE}`,
+    },
+  });
+}
+
+function handleLogout(url) {
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: "/auth/login",
+      "Set-Cookie": `${COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+    },
+  });
+}
+
+function redirectToLogin(url) {
+  return new Response(null, {
+    status: 302,
+    headers: { Location: "/auth/login" },
+  });
+}
+
+// ============================================================
+// Session Management (HMAC-SHA256 signed cookies)
+// ============================================================
+
+async function signSession(data, secret) {
+  const payload = btoa(JSON.stringify(data));
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
+  const sigHex = Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return `${payload}.${sigHex}`;
+}
+
+async function verifySession(cookie, secret) {
+  const parts = cookie.split(".");
+  if (parts.length !== 2) return null;
+
+  const [payload, sigHex] = parts;
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["verify"]
+  );
+
+  const sigBytes = new Uint8Array(sigHex.match(/.{2}/g).map((b) => parseInt(b, 16)));
+  const valid = await crypto.subtle.verify(
+    "HMAC",
+    key,
+    sigBytes,
+    new TextEncoder().encode(payload)
+  );
+
+  if (!valid) return null;
+
+  const data = JSON.parse(atob(payload));
+
+  // Check expiry
+  if (data.exp && data.exp < Math.floor(Date.now() / 1000)) {
+    return null;
+  }
+
+  return data;
+}
+
+async function getSession(req, env) {
+  const cookieHeader = req.headers.get("Cookie") || "";
+  const match = cookieHeader.match(new RegExp(`${COOKIE_NAME}=([^;]+)`));
+  if (!match) return null;
+  return verifySession(match[1], env.SESSION_SECRET);
+}
+
+// ============================================================
+// Chat API Handlers
+// ============================================================
 
 async function handlePostChat(req, env, corsHeaders) {
-  // Authenticate
   const apiKey = req.headers.get("X-API-Key");
   if (!apiKey || apiKey !== env.API_KEY) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -98,12 +353,10 @@ async function handlePostChat(req, env, corsHeaders) {
     });
   }
 
-  // Get existing chat data for this date
   const key = `chat:${date}`;
   const existing = await env.CHAT_KV.get(key, "json");
   const chatData = existing || { date, lines: [] };
 
-  // Append new lines with an index
   for (const line of lines) {
     chatData.lines.push({
       ...line,
@@ -112,10 +365,7 @@ async function handlePostChat(req, env, corsHeaders) {
     });
   }
 
-  // Store updated data
   await env.CHAT_KV.put(key, JSON.stringify(chatData));
-
-  // Update the day index
   await updateDayIndex(env, date);
 
   return new Response(
@@ -134,7 +384,7 @@ async function updateDayIndex(env, date) {
 
   if (!days.includes(date)) {
     days.push(date);
-    days.sort().reverse(); // newest first
+    days.sort().reverse();
     await env.CHAT_KV.put(indexKey, JSON.stringify(days));
   }
 }
@@ -168,15 +418,74 @@ async function handleGetChatSince(date, sinceIndex, env, corsHeaders) {
   const newLines = data.lines.filter((l) => l.index >= sinceIndex);
   return new Response(
     JSON.stringify({ date, lines: newLines, total: data.lines.length }),
-    {
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    }
+    { headers: { "Content-Type": "application/json", ...corsHeaders } }
   );
 }
 
-// --- HTML Templates ---
+// ============================================================
+// HTML Templates
+// ============================================================
 
-function renderIndexPage() {
+function renderErrorPage(title, message) {
+  return `<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+  <style>${getSharedStyles()}
+    .error-box {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .error-box h2 {
+      color: #c87c7c;
+      margin-bottom: 16px;
+    }
+    .error-box p {
+      color: #8a7e6b;
+      margin-bottom: 24px;
+    }
+    .error-box a {
+      color: #c8b06b;
+      text-decoration: none;
+      border: 1px solid #c8b06b;
+      padding: 10px 24px;
+      border-radius: 6px;
+    }
+    .error-box a:hover {
+      background: #c8b06b;
+      color: #0f0d0a;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>LOTRO Chat Archiv</h1>
+    </header>
+    <div class="error-box">
+      <h2>${title}</h2>
+      <p>${message}</p>
+      <a href="/auth/login">Erneut anmelden</a>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+function renderUserBar(session) {
+  if (!session) return "";
+  const avatar = session.avatar
+    ? `<img src="${session.avatar}" alt="" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:6px;">`
+    : "";
+  return `<div class="user-bar">
+    ${avatar}<span>${session.displayName}</span>
+    <a href="/auth/logout" class="logout-link">Abmelden</a>
+  </div>`;
+}
+
+function renderIndexPage(session) {
   return `<!DOCTYPE html>
 <html lang="de">
 <head>
@@ -184,6 +493,21 @@ function renderIndexPage() {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LOTRO Chat Archiv</title>
   <style>${getSharedStyles()}
+    .user-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 8px 0;
+      font-size: 0.85em;
+      color: #8a7e6b;
+    }
+    .logout-link {
+      color: #6a5e4b;
+      text-decoration: none;
+      margin-left: 12px;
+    }
+    .logout-link:hover { color: #c87c7c; }
     .day-list {
       list-style: none;
       padding: 0;
@@ -240,6 +564,7 @@ function renderIndexPage() {
 </head>
 <body>
   <div class="container">
+    ${renderUserBar(session)}
     <header class="header">
       <h1>LOTRO Chat Archiv</h1>
       <p class="subtitle">Mittelerde-Chatprotokoll</p>
@@ -254,6 +579,7 @@ function renderIndexPage() {
     async function loadDays() {
       try {
         const resp = await fetch('/api/days');
+        if (resp.status === 401) { window.location = '/auth/login'; return; }
         const data = await resp.json();
         const container = document.getElementById('day-list');
 
@@ -285,14 +611,13 @@ function renderIndexPage() {
     }
 
     loadDays();
-    // Refresh day list every 30 seconds
     setInterval(loadDays, 30000);
   </script>
 </body>
 </html>`;
 }
 
-function renderDayPage(date) {
+function renderDayPage(date, session) {
   return `<!DOCTYPE html>
 <html lang="de">
 <head>
@@ -300,6 +625,21 @@ function renderDayPage(date) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LOTRO Chat - ${date}</title>
   <style>${getSharedStyles()}
+    .user-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 8px 0;
+      font-size: 0.85em;
+      color: #8a7e6b;
+    }
+    .logout-link {
+      color: #6a5e4b;
+      text-decoration: none;
+      margin-left: 12px;
+    }
+    .logout-link:hover { color: #c87c7c; }
     .back-link {
       display: inline-block;
       color: #8a7e6b;
@@ -418,6 +758,7 @@ function renderDayPage(date) {
 </head>
 <body>
   <div class="container">
+    ${renderUserBar(session)}
     <a href="/" class="back-link">&larr; Alle Tage</a>
     <div class="chat-header">
       <h2>${date}</h2>
@@ -460,6 +801,7 @@ function renderDayPage(date) {
     async function loadChat() {
       try {
         const resp = await fetch('/api/chat/' + DATE);
+        if (resp.status === 401) { window.location = '/auth/login'; return; }
         const data = await resp.json();
         const container = document.getElementById('chat-container');
 
@@ -476,11 +818,8 @@ function renderDayPage(date) {
         container.innerHTML = html;
         currentIndex = data.lines.length;
         document.getElementById('line-count').textContent = currentIndex + ' Nachrichten';
-
-        // Scroll to bottom
         container.scrollTop = container.scrollHeight;
 
-        // Start live polling if today
         if (isLive) {
           document.getElementById('live-badge').style.display = '';
           document.getElementById('scroll-toggle').style.display = '';
@@ -495,6 +834,7 @@ function renderDayPage(date) {
     async function pollForUpdates() {
       try {
         const resp = await fetch('/api/chat/' + DATE + '/since/' + currentIndex);
+        if (resp.status === 401) { window.location = '/auth/login'; return; }
         const data = await resp.json();
 
         if (data.lines && data.lines.length > 0) {
@@ -504,17 +844,15 @@ function renderDayPage(date) {
 
           for (const line of data.lines) {
             container.insertAdjacentHTML('beforeend', renderLine(line, true));
-            // Remove highlight after animation
             setTimeout(() => {
-              const lines = container.querySelectorAll('.new-line');
-              lines.forEach(el => el.classList.remove('new-line'));
+              const newLines = container.querySelectorAll('.new-line');
+              newLines.forEach(el => el.classList.remove('new-line'));
             }, 3000);
           }
 
           currentIndex = data.total;
           document.getElementById('line-count').textContent = currentIndex + ' Nachrichten';
 
-          // Auto-scroll if enabled
           if (document.getElementById('auto-scroll').checked) {
             container.scrollTop = container.scrollHeight;
           }

@@ -2,12 +2,23 @@ name = "lotro-chat-logger"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
 
+# Public config (non-secret)
 [vars]
-# Set your API key as a secret instead: wrangler secret put API_KEY
-# API_KEY = "your-secret-key"
+# Your Discord server (guild) ID
+DISCORD_GUILD_ID = "YOUR_DISCORD_SERVER_ID"
+# Comma-separated Discord role IDs that are allowed access
+# Leave empty to allow all server members
+DISCORD_ROLE_IDS = "ROLE_ID_1,ROLE_ID_2"
+
+# Secrets - set these via: wrangler secret put <NAME>
+# Required secrets:
+#   wrangler secret put API_KEY
+#   wrangler secret put DISCORD_CLIENT_ID
+#   wrangler secret put DISCORD_CLIENT_SECRET
+#   wrangler secret put SESSION_SECRET
 
 [[kv_namespaces]]
 binding = "CHAT_KV"
 id = "your-kv-namespace-id-here"
-# For local dev, add a preview_id:
+# For local dev:
 # preview_id = "your-preview-kv-id-here"
