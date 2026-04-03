@@ -71,20 +71,11 @@ body {
   line-height: 1.7;
   overflow-x: hidden;
   background-image:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 100px,
-      rgba(74, 139, 122, 0.02) 100px,
-      rgba(74, 139, 122, 0.02) 101px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 100px,
-      rgba(184, 134, 78, 0.02) 100px,
-      rgba(184, 134, 78, 0.02) 101px
-    );
+    linear-gradient(180deg, rgba(26, 20, 16, 0.92), rgba(26, 20, 16, 0.88)),
+    url('bg-texture.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
 }
 
 ::selection {
