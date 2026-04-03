@@ -24,11 +24,37 @@ jobs:
         run: |
           python3 fetch_members.py
 
+      - name: Generate public JS (stripped of private data)
+        run: |
+          python3 -c "
+          import json
+          with open('members.json') as f:
+              data = json.load(f)
+          # Only include display-safe fields, strip usernames and join dates
+          public_members = []
+          display_ranks = ['tyrant', 'officer', 'tribe']
+          for m in data['members']:
+              if m['rank'].lower() in display_ranks:
+                  public_members.append({
+                      'name': m['name'],
+                      'avatar': m['avatar'],
+                      'rank': m['rank']
+                  })
+          public = {
+              'member_count': len(public_members),
+              'updated_at': data['updated_at'],
+              'members': public_members
+          }
+          with open('members-data.js', 'w') as f:
+              f.write('window.MEMBERS_DATA = ' + json.dumps(public, ensure_ascii=False) + ';')
+          print(f'Public JS: {len(public_members)} members (filtered)')
+          "
+
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add members.json
+          git add members-data.js
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else

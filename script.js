@@ -135,9 +135,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const noteEl = document.getElementById('rosterNote');
 
     try {
-      const response = await fetch('members.json');
-      if (!response.ok) throw new Error('Fetch failed');
-      const data = await response.json();
+      let data;
+      try {
+        const response = await fetch('members.json');
+        if (!response.ok) throw new Error('Fetch failed');
+        data = await response.json();
+      } catch (fetchErr) {
+        // Fallback: try loading from embedded script tag (for file:// protocol)
+        if (window.MEMBERS_DATA) {
+          data = window.MEMBERS_DATA;
+        } else {
+          throw fetchErr;
+        }
+      }
 
       updatedEl.textContent = `Aktualisiert: ${data.updated_at}`;
 
@@ -169,7 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="member-rank">${member.rank}</div>
             <div class="member-avatar-wrap">${avatarHtml}</div>
             <div class="member-name">${member.name}</div>
-            <div class="member-class">@${member.username}</div>
           </div>
         `;
       }).join('');
