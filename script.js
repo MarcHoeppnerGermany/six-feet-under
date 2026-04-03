@@ -128,6 +128,80 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   });
 
+  // ---------- Load All Members from members.json ----------
+  async function loadAllMembers() {
+    const grid = document.getElementById('rosterGrid');
+    const updatedEl = document.getElementById('rosterUpdated');
+    const noteEl = document.getElementById('rosterNote');
+
+    try {
+      const response = await fetch('members.json');
+      if (!response.ok) throw new Error('Fetch failed');
+      const data = await response.json();
+
+      updatedEl.textContent = `Aktualisiert: ${data.updated_at}`;
+
+      if (!data.members || data.members.length === 0) {
+        grid.innerHTML = `
+          <div class="roster-empty">
+            <p>Noch keine Mitglieder synchronisiert.</p>
+            <p class="roster-empty-hint">Der GitHub Action Workflow muss einmal ausgefuehrt werden.</p>
+          </div>
+        `;
+        noteEl.textContent = 'Richte den Discord Bot ein, um die Mitglieder automatisch zu laden.';
+        return;
+      }
+
+      noteEl.textContent = `${data.member_count} Krieger im Tribe`;
+
+      grid.innerHTML = data.members.map(member => {
+        const rankClass = getRankClass(member.rank);
+        const avatarHtml = member.avatar
+          ? `<img src="${member.avatar}" alt="${member.name}" class="roster-avatar-img">`
+          : `<span class="roster-avatar-fallback">&#9876;</span>`;
+
+        return `
+          <div class="member-card ${rankClass}">
+            <div class="member-rank">${member.rank}</div>
+            <div class="member-avatar-wrap">${avatarHtml}</div>
+            <div class="member-name">${member.name}</div>
+            <div class="member-class">@${member.username}</div>
+          </div>
+        `;
+      }).join('');
+
+      // Re-apply scroll animations to new cards
+      document.querySelectorAll('#rosterGrid .member-card').forEach((el, i) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(30px)';
+        setTimeout(() => {
+          el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+          el.style.opacity = '1';
+          el.style.transform = 'translateY(0)';
+        }, i * 80);
+      });
+
+    } catch (err) {
+      grid.innerHTML = `
+        <div class="roster-empty">
+          <p>Mitgliederliste konnte nicht geladen werden.</p>
+        </div>
+      `;
+      noteEl.textContent = 'members.json nicht gefunden oder fehlerhaft.';
+    }
+  }
+
+  function getRankClass(rank) {
+    const r = rank.toLowerCase();
+    if (r.includes('leader') || r.includes('owner') || r.includes('chief') || r.includes('gründer') || r.includes('founder'))
+      return 'rank-leader';
+    if (r.includes('officer') || r.includes('offizier') || r.includes('captain') || r.includes('lieutenant') || r.includes('mod'))
+      return 'rank-officer';
+    return 'rank-member';
+  }
+
+  loadAllMembers();
+
   // ---------- Discord Widget Integration ----------
   // WICHTIG: Ersetze diese ID mit deiner Discord Server-ID!
   // Findest du unter: Server-Einstellungen → Widget → Server-ID

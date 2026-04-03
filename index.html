@@ -192,47 +192,15 @@
         </div>
       </div>
 
-      <!-- Static Roster (Fallback / Ergänzung) -->
-      <div class="roster-grid">
-        <div class="member-card rank-leader">
-          <div class="member-rank">Tribe Leader</div>
-          <div class="member-avatar">&#9760;</div>
-          <div class="member-name">???</div>
-          <div class="member-class">Dunkler Herrscher</div>
-        </div>
-        <div class="member-card rank-officer">
-          <div class="member-rank">Offizier</div>
-          <div class="member-avatar">&#9876;</div>
-          <div class="member-name">???</div>
-          <div class="member-class">Nazgul</div>
-        </div>
-        <div class="member-card rank-officer">
-          <div class="member-rank">Offizier</div>
-          <div class="member-avatar">&#9876;</div>
-          <div class="member-name">???</div>
-          <div class="member-class">Nazgul</div>
-        </div>
-        <div class="member-card rank-member">
-          <div class="member-rank">Krieger</div>
-          <div class="member-avatar">&#128737;</div>
-          <div class="member-name">???</div>
-          <div class="member-class">Ork-Berserker</div>
-        </div>
-        <div class="member-card rank-member">
-          <div class="member-rank">Krieger</div>
-          <div class="member-avatar">&#128737;</div>
-          <div class="member-name">???</div>
-          <div class="member-class">Uruk-hai</div>
-        </div>
-        <div class="member-card rank-member">
-          <div class="member-rank">Krieger</div>
-          <div class="member-avatar">&#128737;</div>
-          <div class="member-name">???</div>
-          <div class="member-class">Troll</div>
-        </div>
+      <!-- All Members (loaded from members.json) -->
+      <div class="roster-section-header">
+        <h3 class="roster-subtitle">Alle Mitglieder</h3>
+        <span class="roster-updated" id="rosterUpdated"></span>
       </div>
-
-      <p class="roster-note">Platzhalter - echte Namen werden nach Tribe-Grundung eingetragen</p>
+      <div class="roster-grid" id="rosterGrid">
+        <!-- Filled dynamically from members.json -->
+      </div>
+      <p class="roster-note" id="rosterNote"></p>
     </div>
   </section>
 
