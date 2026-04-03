@@ -152,9 +152,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      noteEl.textContent = `${data.member_count} Krieger im Tribe`;
+      // Only show tyrant, officer, tribe
+      const displayRanks = ['tyrant', 'officer', 'tribe'];
+      const filteredMembers = data.members.filter(m => displayRanks.includes(m.rank.toLowerCase()));
 
-      grid.innerHTML = data.members.map(member => {
+      noteEl.textContent = `${filteredMembers.length} Krieger im Tribe`;
+
+      grid.innerHTML = filteredMembers.map(member => {
         const rankClass = getRankClass(member.rank);
         const avatarHtml = member.avatar
           ? `<img src="${member.avatar}" alt="${member.name}" class="roster-avatar-img">`
