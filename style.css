@@ -587,6 +587,21 @@ body {
   border: 1px solid var(--gold-dark);
 }
 
+.rank-tribe .member-rank {
+  color: #7eaa5a;
+  border: 1px solid rgba(126, 170, 90, 0.4);
+}
+
+.rank-ally .member-rank {
+  color: #5a8eaa;
+  border: 1px solid rgba(90, 142, 170, 0.4);
+}
+
+.rank-guest .member-rank {
+  color: var(--text-muted);
+  border: 1px solid rgba(90, 86, 80, 0.4);
+}
+
 .rank-member .member-rank {
   color: var(--text-secondary);
   border: 1px solid var(--text-muted);
@@ -605,6 +620,18 @@ body {
 .rank-officer .member-avatar {
   color: var(--gold);
   text-shadow: 0 0 20px var(--gold-glow);
+}
+
+.rank-tribe .member-avatar {
+  color: #7eaa5a;
+}
+
+.rank-ally .member-avatar {
+  color: #5a8eaa;
+}
+
+.rank-guest .member-avatar {
+  color: var(--text-muted);
 }
 
 .rank-member .member-avatar {
@@ -662,6 +689,14 @@ body {
 
 .rank-officer .roster-avatar-wrap {
   border-color: var(--gold-dark);
+}
+
+.rank-tribe .roster-avatar-wrap {
+  border-color: rgba(126, 170, 90, 0.5);
+}
+
+.rank-ally .roster-avatar-wrap {
+  border-color: rgba(90, 142, 170, 0.5);
 }
 
 .roster-avatar-img {

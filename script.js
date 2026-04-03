@@ -193,10 +193,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function getRankClass(rank) {
     const r = rank.toLowerCase();
-    if (r.includes('leader') || r.includes('owner') || r.includes('chief') || r.includes('gründer') || r.includes('founder'))
-      return 'rank-leader';
-    if (r.includes('officer') || r.includes('offizier') || r.includes('captain') || r.includes('lieutenant') || r.includes('mod'))
-      return 'rank-officer';
+    if (r === 'tyrant') return 'rank-leader';
+    if (r === 'officer') return 'rank-officer';
+    if (r === 'tribe') return 'rank-tribe';
+    if (r === 'ally') return 'rank-ally';
+    if (r === 'guest') return 'rank-guest';
     return 'rank-member';
   }
 
