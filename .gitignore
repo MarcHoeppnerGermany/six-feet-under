@@ -1,2 +1,9 @@
 # Private data - contains Discord usernames, join dates, etc.
 members.json
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
